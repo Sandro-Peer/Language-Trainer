@@ -4,7 +4,7 @@ header('Content-Type: application/json');
 // Verbindung zur Datenbank herstellen (Daten anpassen)
 $host = "localhost";
 $username = "root"; // Standard bei XAMPP
-$password = "Simi"; // Standard kein Passwort bei XAMPP
+$password = ""; // Standard kein Passwort bei XAMPP
 $database = "sprachtrainer";
 
 // Verbindung aufbauen
