@@ -1,2 +1,2 @@
 # Language-Trainer
-Web application to train in a specific language 
+Web application to tranlate german to english
