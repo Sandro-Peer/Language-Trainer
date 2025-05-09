@@ -1,146 +1,67 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <title>Language Trainer</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f9;
-      margin: 0;
-      padding: 40px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+<?php
+header('Content-Type: application/json');
+
+// Verbindung zur Datenbank herstellen (Daten anpassen)
+$host = "localhost";
+$username = "root"; // Standard bei XAMPP
+$password = "Simi"; // Standard kein Passwort bei XAMPP
+$database = "sprachtrainer";
+
+// Verbindung aufbauen
+$conn = new mysqli($host, $username, $password, $database);
+
+if ($conn->connect_error) {
+    echo json_encode(['success' => false, 'message' => 'Verbindung fehlgeschlagen.']);
+    exit;
+}
+
+// Prüfen, ob es sich um eine GET- oder POST-Anfrage handelt
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    // Prüfen, ob ein Wort übergeben wurde
+    if (!isset($_GET['word'])) {
+        echo json_encode(['success' => false, 'message' => 'Kein Wort übergeben.']);
+        exit;
     }
 
-    h1 {
-      color: #333;
+    // Wort bereinigen
+    $word = trim($_GET['word']);
+
+    // SQL-Abfrage mit Prepared Statement
+    $stmt = $conn->prepare("SELECT uebersetzung FROM woerterbuch WHERE original = ?");
+    $stmt->bind_param("s", $word);
+    $stmt->execute();
+    $stmt->bind_result($translation);
+
+    // Ergebnis zurückgeben
+    if ($stmt->fetch()) {
+        echo json_encode(['success' => true, 'translation' => $translation]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Keine Übersetzung gefunden.']);
     }
 
-    .translator {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 400px;
+    $stmt->close();
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Prüfen, ob die notwendigen Daten übergeben wurden
+    $data = json_decode(file_get_contents('php://input'), true);
+    if (isset($data['word']) && isset($data['translation'])) {
+        $word = trim($data['word']);
+        $translation = trim($data['translation']);
+
+        // SQL-Abfrage zum Hinzufügen der Übersetzung
+        $stmt = $conn->prepare("INSERT INTO woerterbuch (original, uebersetzung) VALUES (?, ?)");
+        $stmt->bind_param("ss", $word, $translation);
+
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Übersetzung gespeichert.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Fehler beim Speichern der Übersetzung.']);
+        }
+
+        $stmt->close();
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Fehlende Daten für das Speichern.']);
     }
+}
 
-    input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
-
-    button {
-      width: 100%;
-      padding: 10px;
-      background-color: #0077cc;
-      color: white;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #005fa3;
-    }
-
-    #result {
-      margin-top: 15px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #333;
-    }
-
-    #addTranslation {
-      margin-top: 20px;
-    }
-
-    #addTranslation input {
-      margin-bottom: 10px;
-    }
-    
-  </style>
-</head>
-<body>
-
-  <h1>Language Trainer</h1>
-
-  <div class="translator">
-    <input type="text" id="wordInput" placeholder="Gib ein Wort ein...">
-    <button onclick="translateWord()">Übersetzen</button>
-    <div id="result"></div>
-  </div>
-
-  <div id="addTranslation">
-    <h1>Übersetzung hinzufügen</h1>
-    <input type="text" id="translationInput" placeholder="Gib die Übersetzung ein...">
-    <button onclick="saveTranslation()">Speichern</button>
-    </div>
-  </div>
-
-  <script>
-    function translateWord() {
-      const word = document.getElementById("wordInput").value.trim();
-
-      if (word === "") {
-        document.getElementById("result").textContent = "Bitte gib ein Wort ein.";
-        return;
-      }
-
-      fetch("translate.php?word=" + encodeURIComponent(word))
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            document.getElementById("result").textContent = "Übersetzung: " + data.translation;
-          } else {
-            document.getElementById("result").textContent = "Keine Übersetzung gefunden.";
-          }
-        })
-        .catch(error => {
-          console.error("Fehler:", error);
-          document.getElementById("result").textContent = "Ein Fehler ist aufgetreten.";
-        });
-    }
-    function saveTranslation() {
-      const word = document.getElementById("wordInput").value.trim();
-      const translation = document.getElementById("translationInput").value.trim();
-
-      if (translation === "") {
-        document.getElementById("result").textContent = "Bitte gib eine Übersetzung ein.";
-        return;
-      }
-
-      fetch("saveTranslation.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ word: word, translation: translation })
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            document.getElementById("result").textContent = "Übersetzung gespeichert!";
-            document.getElementById("addTranslation").style.display = "none"; // Versteckt das Eingabefeld nach dem Speichern
-            document.getElementById("wordInput").value = ""; // Leert das Eingabefeld
-            document.getElementById("translationInput").value = "";
-          } else {
-            document.getElementById("result").textContent = "Fehler beim Speichern der Übersetzung.";
-          }
-        })
-        .catch(error => {
-          console.error("Fehler:", error);
-          document.getElementById("result").textContent = "Ein Fehler ist aufgetreten.";
-        });
-    }
-  </script>
-
-</body>
-</html>
+$conn->close();
+?>
