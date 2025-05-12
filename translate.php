@@ -1,16 +1,56 @@
 <?php
 header("Content-Type: application/json");
 
-$host = "localhost";
-$username = "root";
-$password = "";
-$database = "sprachtrainer";
+// Konstanten definieren
+define("DB_HOST", "localhost");
+define("DB_USER", "root");
+define("DB_PASS", "password");
+define("DB_NAME", "sprachtrainer");
+define("TABLE_NAME", "woerterbuch");
 
-$conn = new mysqli($host, $username, $password, $database);
+// Datenbankverbindung herstellen
+function getDatabaseConnection() {
+    $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+    if ($conn->connect_error) {
+        respondWithError("DB-Verbindung fehlgeschlagen.");
+    }
+    return $conn;
+}
 
-if ($conn->connect_error) {
-    echo json_encode(["success" => false, "error" => "DB-Verbindung fehlgeschlagen."]);
+// Einheitliche JSON-Antworten
+function respondWithError($message) {
+    echo json_encode(["success" => false, "error" => $message]);
     exit;
+}
+
+function respondWithSuccess($data = []) {
+    echo json_encode(array_merge(["success" => true], $data));
+    exit;
+}
+
+// Übersetzung speichern
+function saveTranslation($conn, $original, $translation) {
+    $stmt = $conn->prepare("REPLACE INTO " . TABLE_NAME . " (original, uebersetzung) VALUES (?, ?)");
+    if (!$stmt) {
+        respondWithError("Datenbankfehler: " . $conn->error);
+    }
+    $stmt->bind_param("ss", $original, $translation);
+    $stmt->execute();
+    $stmt->close();
+}
+
+// Übersetzung abrufen
+function getTranslation($conn, $word) {
+    $stmt = $conn->prepare("SELECT uebersetzung FROM " . TABLE_NAME . " WHERE original = ?");
+    if (!$stmt) {
+        respondWithError("Datenbankfehler: " . $conn->error);
+    }
+    $stmt->bind_param("s", $word);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $translation = $result->fetch_assoc()["uebersetzung"] ?? null;
+    $stmt->close();
+    return $translation;
 }
 
 // POST: Satzweise Übersetzung speichern
@@ -18,78 +58,61 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $data = json_decode(file_get_contents("php://input"), true);
 
     if (!$data || !isset($data["word"]) || !isset($data["translation"])) {
-        echo json_encode(["success" => false, "error" => "Ungültiges JSON oder fehlende Felder."]);
-        exit;
+        respondWithError("Ungültiges JSON oder fehlende Felder.");
     }
 
     $originalSatz = strtolower(trim($data["word"]));
     $uebersetzungSatz = trim($data["translation"]);
 
-    if ($originalSatz && $uebersetzungSatz) {
-        $originalWoerter = preg_split('/\s+/', $originalSatz);
-        $uebersetzteWoerter = preg_split('/\s+/', $uebersetzungSatz);
-
-        if (count($originalWoerter) === count($uebersetzteWoerter)) {
-            $stmt = $conn->prepare("REPLACE INTO woerterbuch (original, uebersetzung) VALUES (?, ?)");
-            for ($i = 0; $i < count($originalWoerter); $i++) {
-                $original = $originalWoerter[$i];
-                $uebersetzung = $uebersetzteWoerter[$i];
-                $stmt->bind_param("ss", $original, $uebersetzung);
-                $stmt->execute();
-            }
-        } else {
-            // Ganze Phrase speichern
-            $stmt = $conn->prepare("REPLACE INTO woerterbuch (original, uebersetzung) VALUES (?, ?)");
-            $stmt->bind_param("ss", $originalSatz, $uebersetzungSatz);
-            $stmt->execute();
-        }
-
-        echo json_encode(["success" => true]);
-    } else {
-        echo json_encode(["success" => false, "error" => "Leere Eingabe."]);
+    if (empty($originalSatz) || empty($uebersetzungSatz)) {
+        respondWithError("Leere Eingabe.");
     }
 
-    exit;
-}
+    $conn = getDatabaseConnection();
 
+    $originalWoerter = preg_split('/\s+/', $originalSatz);
+    $uebersetzteWoerter = preg_split('/\s+/', $uebersetzungSatz);
+
+    if (count($originalWoerter) === count($uebersetzteWoerter)) {
+        foreach ($originalWoerter as $i => $original) {
+            saveTranslation($conn, $original, $uebersetzteWoerter[$i]);
+        }
+    } else {
+        saveTranslation($conn, $originalSatz, $uebersetzungSatz);
+    }
+
+    $conn->close();
+    respondWithSuccess();
+}
 
 // GET: Satz oder Wörter übersetzen
-if (isset($_GET["word"])) {
+if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["word"])) {
     $satz = strtolower(trim($_GET["word"]));
-
-    // 1. Versuch: ganze Phrase in der Datenbank finden
-    $stmt = $conn->prepare("SELECT uebersetzung FROM woerterbuch WHERE original = ?");
-    $stmt->bind_param("s", $satz);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($row = $result->fetch_assoc()) {
-        // Ganze Phrase gefunden → direkt zurückgeben
-        echo json_encode(["success" => true, "translation" => $row["uebersetzung"]]);
-        exit;
+    if (empty($satz)) {
+        respondWithError("Leere Eingabe.");
     }
 
-    // 2. Versuch: Satz in Wörter aufteilen und einzeln übersetzen
-    $woerter = preg_split('/\s+/', $satz); // Satz in Wörter aufteilen
+    $conn = getDatabaseConnection();
+
+    // Ganze Phrase abrufen
+    $translation = getTranslation($conn, $satz);
+    if ($translation) {
+        $conn->close();
+        respondWithSuccess(["translation" => $translation]);
+    }
+
+    // Satz in Wörter aufteilen und einzeln übersetzen
+    $woerter = preg_split('/\s+/', $satz);
     $uebersetzteWoerter = [];
 
-    $stmt = $conn->prepare("SELECT uebersetzung FROM woerterbuch WHERE original = ?");
-
     foreach ($woerter as $wort) {
-        $stmt->bind_param("s", $wort);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($row = $result->fetch_assoc()) {
-            $uebersetzteWoerter[] = $row["uebersetzung"];
-        } else {
-            $uebersetzteWoerter[] = "[$wort]"; // Unbekanntes Wort markieren
-        }
+        $translation = getTranslation($conn, $wort);
+        $uebersetzteWoerter[] = $translation ?? "[$wort]";
     }
 
+    $conn->close();
     $uebersetzterSatz = implode(" ", $uebersetzteWoerter);
-    echo json_encode(["success" => true, "translation" => $uebersetzterSatz]);
-    exit;
+    respondWithSuccess(["translation" => $uebersetzterSatz]);
 }
 
-echo json_encode(["success" => false, "error" => "Ungültige Anfrage."]);
+respondWithError("Ungültige Anfrage.");
