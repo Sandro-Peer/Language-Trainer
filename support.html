@@ -6,35 +6,52 @@
   <title>Support - Language Trainer</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f9;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #e3f2fd, #ffffff);
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 40px;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
     }
 
     h1 {
-      color: #333;
+      color: #3f51b5;
       margin-bottom: 20px;
+      font-size: 2.5rem;
+      text-align: center;
     }
 
     .form-container {
-      background: white;
+      background: #fff;
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
       width: 100%;
-      max-width: 500px;
+      max-width: 600px;
+      transition: transform 0.3s ease;
+    }
+
+    .form-container:hover {
+      transform: scale(1.02);
     }
 
     input[type="text"], input[type="email"], textarea {
       width: 100%;
-      padding: 10px;
+      padding: 14px;
       font-size: 16px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      border: 2px solid #ccc;
       border-radius: 8px;
+      background: #f9f9f9;
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="text"]:focus, input[type="email"]:focus, textarea:focus {
+      border-color: #3f51b5;
+      outline: none;
     }
 
     textarea {
@@ -44,25 +61,44 @@
 
     button {
       width: 100%;
-      padding: 12px;
-      background-color: #0077cc;
+      padding: 14px;
+      background-color: #3f51b5;
       color: white;
       font-size: 16px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
 
     button:hover {
-      background-color: #005fa3;
+      background-color: #303f9f;
     }
 
     #result {
-      margin-top: 15px;
+      margin-top: 20px;
       font-size: 18px;
-      font-weight: bold;
-      color: #333;
+      font-weight: 600;
+      color: #3f51b5;
       text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      .form-container {
+        padding: 20px;
+      }
+
+      input[type="text"], input[type="email"], textarea {
+        padding: 12px;
+      }
+
+      button {
+        padding: 12px;
+      }
     }
   </style>
 </head>
@@ -90,11 +126,12 @@
 
       if (!name || !email || !message) {
         document.getElementById("result").textContent = "Bitte fülle alle Felder aus.";
+        document.getElementById("result").style.color = "red";
         return;
       }
 
-     
       document.getElementById("result").textContent = "Vielen Dank! Deine Anfrage wurde abgeschickt.";
+      document.getElementById("result").style.color = "green";
     });
   </script>
 
