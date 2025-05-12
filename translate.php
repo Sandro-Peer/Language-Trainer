@@ -1,67 +1,62 @@
 <?php
-header('Content-Type: application/json');
+header("Content-Type: application/json");
 
-// Verbindung zur Datenbank herstellen (Daten anpassen)
+// Datenbankverbindung (bitte Zugangsdaten anpassen)
 $host = "localhost";
-$username = "root"; // Standard bei XAMPP
-$password = "Simi"; // Standard kein Passwort bei XAMPP
+$username = "root";
+$password = "Simi";
 $database = "sprachtrainer";
 
-// Verbindung aufbauen
 $conn = new mysqli($host, $username, $password, $database);
 
+// Verbindung prüfen
 if ($conn->connect_error) {
-    echo json_encode(['success' => false, 'message' => 'Verbindung fehlgeschlagen.']);
+    echo json_encode(["success" => false, "error" => "DB-Verbindung fehlgeschlagen."]);
     exit;
 }
 
-// Prüfen, ob es sich um eine GET- oder POST-Anfrage handelt
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Prüfen, ob ein Wort übergeben wurde
-    if (!isset($_GET['word'])) {
-        echo json_encode(['success' => false, 'message' => 'Kein Wort übergeben.']);
-        exit;
-    }
+// POST-Anfrage: neue Übersetzung speichern
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $data = json_decode(file_get_contents("php://input"), true);
+    $original = strtolower(trim($data["word"]));
+    $uebersetzung = trim($data["translation"]);
 
-    // Wort bereinigen
-    $word = trim($_GET['word']);
-
-    // SQL-Abfrage mit Prepared Statement
-    $stmt = $conn->prepare("SELECT uebersetzung FROM woerterbuch WHERE original = ?");
-    $stmt->bind_param("s", $word);
-    $stmt->execute();
-    $stmt->bind_result($translation);
-
-    // Ergebnis zurückgeben
-    if ($stmt->fetch()) {
-        echo json_encode(['success' => true, 'translation' => $translation]);
+    if ($original && $uebersetzung) {
+        // Bestehenden Eintrag ersetzen oder neuen hinzufügen
+        $stmt = $conn->prepare("REPLACE INTO woerterbuch (original, uebersetzung) VALUES (?, ?)");
+        $stmt->bind_param("ss", $original, $uebersetzung);
+        $success = $stmt->execute();
+        echo json_encode(["success" => $success]);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Keine Übersetzung gefunden.']);
+        echo json_encode(["success" => false, "error" => "Ungültige Eingabe."]);
     }
-
-    $stmt->close();
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Prüfen, ob die notwendigen Daten übergeben wurden
-    $data = json_decode(file_get_contents('php://input'), true);
-    if (isset($data['word']) && isset($data['translation'])) {
-        $word = trim($data['word']);
-        $translation = trim($data['translation']);
-
-        // SQL-Abfrage zum Hinzufügen der Übersetzung
-        $stmt = $conn->prepare("INSERT INTO woerterbuch (original, uebersetzung) VALUES (?, ?)");
-        $stmt->bind_param("ss", $word, $translation);
-
-        if ($stmt->execute()) {
-            echo json_encode(['success' => true, 'message' => 'Übersetzung gespeichert.']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Fehler beim Speichern der Übersetzung.']);
-        }
-
-        $stmt->close();
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Fehlende Daten für das Speichern.']);
-    }
+    exit;
 }
 
-$conn->close();
-?>
+// GET-Anfrage: Satz übersetzen
+if (isset($_GET["word"])) {
+    $satz = strtolower(trim($_GET["word"]));
+    $woerter = preg_split('/\s+/', $satz); // Satz in Wörter aufteilen
+    $uebersetzteWoerter = [];
+
+    $stmt = $conn->prepare("SELECT uebersetzung FROM woerterbuch WHERE original = ?");
+
+    foreach ($woerter as $wort) {
+        $stmt->bind_param("s", $wort);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($row = $result->fetch_assoc()) {
+            $uebersetzteWoerter[] = $row["uebersetzung"];
+        } else {
+            $uebersetzteWoerter[] = "[$wort]"; // Unbekanntes Wort markieren
+        }
+    }
+
+    $uebersetzterSatz = implode(" ", $uebersetzteWoerter);
+    echo json_encode(["success" => true, "translation" => $uebersetzterSatz]);
+    exit;
+}
+
+// Fallback
+echo json_encode(["success" => false, "error" => "Ungültige Anfrage."]);
