@@ -117,3 +117,5 @@ INSERT INTO woerterbuch (original, uebersetzung) VALUES
 ('oft', 'often'),
 ('selten', 'rarely'),
 ('nie', 'never');
+
+
