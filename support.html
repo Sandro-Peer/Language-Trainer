@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Support - Language Trainer</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f2f4f8;
+      background: #121212;
+      color: #e0e0e0;
       margin: 0;
       padding: 0;
       display: flex;
@@ -17,17 +18,17 @@
     }
 
     .form-container {
-      background: #fff;
+      background: #1e1e1e;
       padding: 2rem;
       border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
       width: 100%;
       max-width: 400px;
     }
 
     h1 {
       text-align: center;
-      color: #333;
+      color: #ffffff;
       margin-bottom: 1.5rem;
     }
 
@@ -35,22 +36,23 @@
       width: 100%;
       padding: 0.75rem;
       margin-bottom: 1rem;
-      border: 1px solid #ccc;
+      border: 1px solid #333;
       border-radius: 5px;
       font-size: 1rem;
-      box-sizing: border-box;
+      background-color: #2a2a2a;
+      color: #e0e0e0;
       transition: border-color 0.3s ease;
     }
 
     input:focus, textarea:focus {
-      border-color: #007bff;
+      border-color: #66b2ff;
       outline: none;
     }
 
     button {
       width: 100%;
       padding: 0.75rem;
-      background-color: #007bff;
+      background-color: #1a73e8;
       color: white;
       border: none;
       border-radius: 5px;
@@ -60,7 +62,7 @@
     }
 
     button:hover {
-      background-color: #0056b3;
+      background-color: #1359c5;
     }
 
     #result {
@@ -75,9 +77,9 @@
   <div class="form-container">
     <h1>Support</h1>
     <form id="supportForm">
-      <input type="text" id="name" placeholder="Dein Name" required>
-      <input type="email" id="email" placeholder="Deine E-Mail" required>
-      <textarea id="message" placeholder="Deine Nachricht" rows="5" required></textarea>     
+      <input type="text" id="name" placeholder="Dein Name" required />
+      <input type="email" id="email" placeholder="Deine E-Mail" required />
+      <textarea id="message" placeholder="Deine Nachricht" rows="5" required></textarea>
       <button type="submit">Absenden</button>
     </form>
     <div id="result"></div>
@@ -95,12 +97,12 @@
 
       if (!name || !email || !message) {
         resultDiv.textContent = "Bitte fülle alle Felder aus.";
-        resultDiv.style.color = "red";
+        resultDiv.style.color = "#ff5252";
         return;
       }
 
       resultDiv.textContent = "Vielen Dank! Deine Anfrage wurde abgeschickt.";
-      resultDiv.style.color = "green";
+      resultDiv.style.color = "#4caf50";
     });
   </script>
 
