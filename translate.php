@@ -4,7 +4,7 @@ header("Content-Type: application/json");
 // Datenbankverbindung (bitte Zugangsdaten anpassen)
 $host = "localhost";
 $username = "root";
-$password = "Simi";
+$password = "";
 $database = "sprachtrainer";
 
 $conn = new mysqli($host, $username, $password, $database);
