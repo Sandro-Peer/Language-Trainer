@@ -238,7 +238,7 @@
   <div class="dropdown-content">
     
     <a href="vokabeln-lernen.html">🔤 Vokabeln lernen</a>
-   
+    <a href="Vocabel Trainer.html">aaaa</a>
   </div>
 </div>
 
@@ -255,9 +255,13 @@
 
   <div class="translator">
     <input type="text" id="wordInput" placeholder="Gib ein Wort ein...">
-    <button onclick="translateWord()">Übersetzen</button>
+    <div class="button-row">
+      <button onclick="translateWord()">Übersetzen</button>
+      <button onclick="zeigeFalscheWoerter()" style="background-color: #ff5c5c;"> Fehler anzeigen</button>
+    </div>
     <div id="result"></div>
   </div>
+  
 
   <div id="addTranslation">
     <h1>Übersetzung hinzufügen</h1>
@@ -266,6 +270,12 @@
     </div>
   </div>
 
+  <div class="container" id="falscheWoerterBox" style="display: none; margin-top: 30px;">
+    <h2>Falsch übersetzte Wörter</h2>
+    <ul id="falscheListe" style="margin-top: 15px; padding-left: 20px; list-style: disc;"></ul>
+  </div>
+  
+  
   <script>
     function translateWord() {
       const word = document.getElementById("wordInput").value.trim();
@@ -320,6 +330,38 @@
           document.getElementById("result").textContent = "Ein Fehler ist aufgetreten.";
         });
     }
+
+  function zeigeFalscheWoerter() {
+  fetch("translate.php?showWrong=1")
+    .then(response => response.json())
+    .then(data => {
+      const box = document.getElementById("falscheWoerterBox");
+      const liste = document.getElementById("falscheListe");
+      liste.innerHTML = "";
+
+      if (data.success && data.wrongWords && data.wrongWords.length > 0) {
+        data.wrongWords.forEach(wort => {
+          const li = document.createElement("li");
+          li.textContent = wort;
+          liste.appendChild(li);
+        });
+        box.style.display = "block";
+        box.scrollIntoView({ behavior: "smooth" });
+      } else {
+        const li = document.createElement("li");
+        li.textContent = "Keine falsch übersetzten Wörter gespeichert.";
+        liste.appendChild(li);
+        box.style.display = "block";
+      }
+    })
+    .catch(error => {
+      console.error("Fehler:", error);
+      document.getElementById("falscheListe").innerHTML = "<li>Fehler beim Laden der Liste.</li>";
+      document.getElementById("falscheWoerterBox").style.display = "block";
+    });
+}
+
+
   </script>
 
 </body>
