@@ -238,7 +238,7 @@
   <div class="dropdown-content">
     
     <a href="vokabeln-lernen.html">🔤 Vokabeln lernen</a>
-    <a href="Vocabel Trainer.html">aaaa</a>
+    <a href="Trainer.html">Üben</a>
   </div>
 </div>
 
@@ -331,35 +331,35 @@
         });
     }
 
-  function zeigeFalscheWoerter() {
-  fetch("translate.php?showWrong=1")
-    .then(response => response.json())
-    .then(data => {
-      const box = document.getElementById("falscheWoerterBox");
-      const liste = document.getElementById("falscheListe");
-      liste.innerHTML = "";
+    function zeigeFalscheWoerter() {
+    fetch("translate.php?showWrong=1")
+      .then(response => response.json())
+      .then(data => {
+        const box = document.getElementById("falscheWoerterBox");
+        const liste = document.getElementById("falscheListe");
+        liste.innerHTML = "";
 
-      if (data.success && data.wrongWords && data.wrongWords.length > 0) {
-        data.wrongWords.forEach(wort => {
+        if (data.success && data.wrongWords && data.wrongWords.length > 0) {
+          data.wrongWords.forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = `${item.original} - ${item.uebersetzung}`;
+            liste.appendChild(li);
+          });
+          box.style.display = "block";
+          box.scrollIntoView({ behavior: "smooth" });
+        } else {
           const li = document.createElement("li");
-          li.textContent = wort;
+          li.textContent = "Keine falsch übersetzten Wörter gespeichert.";
           liste.appendChild(li);
-        });
-        box.style.display = "block";
-        box.scrollIntoView({ behavior: "smooth" });
-      } else {
-        const li = document.createElement("li");
-        li.textContent = "Keine falsch übersetzten Wörter gespeichert.";
-        liste.appendChild(li);
-        box.style.display = "block";
-      }
-    })
-    .catch(error => {
-      console.error("Fehler:", error);
-      document.getElementById("falscheListe").innerHTML = "<li>Fehler beim Laden der Liste.</li>";
-      document.getElementById("falscheWoerterBox").style.display = "block";
-    });
-}
+          box.style.display = "block";
+        }
+      })
+      .catch(error => {
+        console.error("Fehler:", error);
+        document.getElementById("falscheListe").innerHTML = "<li>Fehler beim Laden der Liste.</li>";
+        document.getElementById("falscheWoerterBox").style.display = "block";
+      });
+  }
 
 
   </script>
