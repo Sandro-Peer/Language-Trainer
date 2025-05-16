@@ -5,7 +5,7 @@ header("Content-Type: application/json");
 // Konstanten definieren
 define("DB_HOST", "localhost");
 define("DB_USER", "root");
-define("DB_PASS", "");
+define("DB_PASS", "root");
 define("DB_NAME", "sprachtrainer");
 define("TABLE_NAME", "woerterbuch");
 
@@ -107,6 +107,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $conn->close();
     respondWithSuccess();
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["word"])) {
+    $word = strtolower(trim($_GET["word"]));
+    if (empty($word)) {
+        respondWithError("Leere Eingabe.");
+    }
+
+    $conn = getDatabaseConnection();
+
+    // Fetch translation for the word
+    $translation = getTranslation($conn, $word);
+    if ($translation) {
+        $conn->close();
+        respondWithSuccess(["translation" => $translation]);
+    }
+
+    $conn->close();
+    respondWithError("Keine Übersetzung gefunden.");
 }
 
 // GET: falsch übersetzte Wörter anzeigen
