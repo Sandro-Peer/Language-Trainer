@@ -1,10 +1,11 @@
 <?php
+session_start();
 header("Content-Type: application/json");
 
 // Konstanten definieren
 define("DB_HOST", "localhost");
 define("DB_USER", "root");
-define("DB_PASS", "password");
+define("DB_PASS", "");
 define("DB_NAME", "sprachtrainer");
 define("TABLE_NAME", "woerterbuch");
 
@@ -85,6 +86,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     respondWithSuccess();
 }
 
+// GET: falsch übersetzte Wörter anzeigen
+if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["showWrong"])) {
+    $liste = isset($_SESSION['falsch']) ? $_SESSION['falsch'] : [];
+    respondWithSuccess(["wrongWords" => $liste]);
+}
+
 // GET: Satz oder Wörter übersetzen
 if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["word"])) {
     $satz = strtolower(trim($_GET["word"]));
@@ -107,7 +114,12 @@ if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["word"])) {
 
     foreach ($woerter as $wort) {
         $translation = getTranslation($conn, $wort);
-        $uebersetzteWoerter[] = $translation ?? "[$wort]";
+        if ($translation) {
+            $uebersetzteWoerter[] = $translation;
+        } else {
+            $uebersetzteWoerter[] = "[$wort]"; // Unübersetztes Wort kenntlich machen
+
+        }
     }
 
     $conn->close();
