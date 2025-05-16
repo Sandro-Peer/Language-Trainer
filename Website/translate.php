@@ -54,9 +54,32 @@ function getTranslation($conn, $word) {
     return $translation;
 }
 
-// POST: Satzweise Übersetzung speichern
+// Wörter für das Training abrufen
+function getWordsForTraining($conn) {
+    $result = $conn->query("SELECT original, uebersetzung FROM " . TABLE_NAME);
+    if (!$result) {
+        respondWithError("Datenbankfehler: " . $conn->error);
+    }
+
+    $words = [];
+    while ($row = $result->fetch_assoc()) {
+        $words[] = $row;
+    }
+    return $words;
+}
+
+// POST: Falsche Antworten speichern
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $data = json_decode(file_get_contents("php://input"), true);
+
+    if (isset($data["falsch"])) {
+        $falsch = $data["falsch"];
+        if (!isset($_SESSION["falsch"])) {
+            $_SESSION["falsch"] = [];
+        }
+        $_SESSION["falsch"][] = $falsch;
+        respondWithSuccess();
+    }
 
     if (!$data || !isset($data["word"]) || !isset($data["translation"])) {
         respondWithError("Ungültiges JSON oder fehlende Felder.");
@@ -92,39 +115,54 @@ if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["showWrong"])) {
     respondWithSuccess(["wrongWords" => $liste]);
 }
 
-// GET: Satz oder Wörter übersetzen
-if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["word"])) {
-    $satz = strtolower(trim($_GET["word"]));
-    if (empty($satz)) {
-        respondWithError("Leere Eingabe.");
-    }
+// GET: Wörter für das Training abrufen
+if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["getWords"])) {
+    $conn = getDatabaseConnection();
+    $words = getWordsForTraining($conn);
+    $conn->close();
+    respondWithSuccess(["words" => $words]);
+}
 
+// GET: Satz oder Wörter übersetzen
+// GET: Wörter für das Training abrufen
+if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["getWords"])) {
     $conn = getDatabaseConnection();
 
-    // Ganze Phrase abrufen
-    $translation = getTranslation($conn, $satz);
-    if ($translation) {
-        $conn->close();
-        respondWithSuccess(["translation" => $translation]);
+    // Fetch wrong words from the session
+    $wrongWords = isset($_SESSION['falsch']) ? $_SESSION['falsch'] : [];
+
+    // Fetch all words from the database
+    $result = $conn->query("SELECT original, uebersetzung FROM " . TABLE_NAME);
+    if (!$result) {
+        respondWithError("Datenbankfehler: " . $conn->error);
     }
 
-    // Satz in Wörter aufteilen und einzeln übersetzen
-    $woerter = preg_split('/\s+/', $satz);
-    $uebersetzteWoerter = [];
+    $allWords = [];
+    while ($row = $result->fetch_assoc()) {
+        $allWords[] = $row;
+    }
 
-    foreach ($woerter as $wort) {
-        $translation = getTranslation($conn, $wort);
-        if ($translation) {
-            $uebersetzteWoerter[] = $translation;
-        } else {
-            $uebersetzteWoerter[] = "[$wort]"; // Unübersetztes Wort kenntlich machen
-
+    // Prioritize wrong words
+    $words = [];
+    foreach ($wrongWords as $wrongWord) {
+        foreach ($allWords as $key => $word) {
+            if ($word['original'] === $wrongWord) {
+                $words[] = $word;
+                unset($allWords[$key]); // Remove to avoid duplicates
+                break;
+            }
         }
     }
 
+    // Add remaining words and shuffle
+    $words = array_merge($words, $allWords);
+    shuffle($words);
+
+    // Limit to 20 words
+    $words = array_slice($words, 0, 20);
+
     $conn->close();
-    $uebersetzterSatz = implode(" ", $uebersetzteWoerter);
-    respondWithSuccess(["translation" => $uebersetzterSatz]);
+    respondWithSuccess(["words" => $words]);
 }
 
 respondWithError("Ungültige Anfrage.");
