@@ -277,27 +277,27 @@
   
   <script>
     function translateWord() {
-      const word = document.getElementById("wordInput").value.trim();
+  const word = document.getElementById("wordInput").value.trim();
 
-      if (word === "") {
-        document.getElementById("result").textContent = "Bitte gib ein Wort ein.";
-        return;
+  if (word === "") {
+    document.getElementById("result").textContent = "Bitte gib ein Wort ein.";
+    return;
+  }
+
+  fetch("translate.php?word=" + encodeURIComponent(word))
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById("result").textContent = "Übersetzung: " + data.translation;
+      } else {
+        document.getElementById("result").textContent = "Keine Übersetzung gefunden.";
       }
-
-      fetch("translate.php?word=" + encodeURIComponent(word))
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            document.getElementById("result").textContent = "Übersetzung: " + data.translation;
-          } else {
-            document.getElementById("result").textContent = "Keine Übersetzung gefunden.";
-          }
-        })
-        .catch(error => {
-          console.error("Fehler:", error);
-          document.getElementById("result").textContent = "Ein Fehler ist aufgetreten.";
-        });
-    }
+    })
+    .catch(error => {
+      console.error("Fehler:", error);
+      document.getElementById("result").textContent = "Ein Fehler ist aufgetreten.";
+    });
+}
     function saveTranslation() {
       const word = document.getElementById("wordInput").value.trim();
       const translation = document.getElementById("translationInput").value.trim();
