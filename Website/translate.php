@@ -111,19 +111,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 // GET: falsch übersetzte Wörter anzeigen
 if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["showWrong"])) {
-    $liste = isset($_SESSION['falsch']) ? $_SESSION['falsch'] : [];
-    respondWithSuccess(["wrongWords" => $liste]);
-}
-
-// GET: Wörter für das Training abrufen
-if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["getWords"])) {
     $conn = getDatabaseConnection();
-    $words = getWordsForTraining($conn);
+    $wrongWords = isset($_SESSION['falsch']) ? $_SESSION['falsch'] : [];
+    $wrongWordsWithTranslations = [];
+
+    foreach ($wrongWords as $wrongWord) {
+        $stmt = $conn->prepare("SELECT original, uebersetzung FROM " . TABLE_NAME . " WHERE original = ?");
+        if ($stmt) {
+            $stmt->bind_param("s", $wrongWord);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $wrongWordsWithTranslations[] = $row;
+            }
+            $stmt->close();
+        }
+    }
+
     $conn->close();
-    respondWithSuccess(["words" => $words]);
+    respondWithSuccess(["wrongWords" => $wrongWordsWithTranslations]);
 }
 
-// GET: Satz oder Wörter übersetzen
+
+
 // GET: Wörter für das Training abrufen
 if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["getWords"])) {
     $conn = getDatabaseConnection();
