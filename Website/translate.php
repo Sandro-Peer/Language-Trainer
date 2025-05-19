@@ -5,7 +5,7 @@ header("Content-Type: application/json");
 // Konstanten definieren
 define("DB_HOST", "localhost");
 define("DB_USER", "root");
-define("DB_PASS", "root");
+define("DB_PASS", "Simi");
 define("DB_NAME", "sprachtrainer");
 define("TABLE_NAME", "woerterbuch");
 
@@ -193,5 +193,36 @@ if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["getWords"])) {
     $conn->close();
     respondWithSuccess(["words" => $words]);
 }
+if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+    $data = json_decode(file_get_contents("php://input"), true);
+
+    if (isset($data['word']) && isset($data['translation'])) {
+        // keine zweite session_start() nötig – ist ganz oben im Skript schon gesetzt
+
+        $conn = getDatabaseConnection();
+        saveTranslation($conn, $data['word'], $data['translation']);
+        $conn->close();
+        
+        $_SESSION['falsch'] = array_filter($_SESSION['falsch'], function($wort) use ($data) {
+            return $wort !== $data['word'];
+        });
+        
+
+        // Auch Session aktualisieren, falls vorhanden
+        if (isset($_SESSION['falsch']) && is_array($_SESSION['falsch'])) {
+            foreach ($_SESSION['falsch'] as &$wort) {
+                if ($wort === $data['word']) {
+                    // keine Änderung nötig – optional: Du kannst hier Logging oder Entfernen einbauen
+                    break;
+                }
+            }
+        }
+
+        respondWithSuccess();
+    } else {
+        respondWithError("Ungültige Daten.");
+    }
+}
+
 
 respondWithError("Ungültige Anfrage.");
