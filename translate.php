@@ -5,7 +5,7 @@ header("Content-Type: application/json");
 // Konstanten definieren
 define("DB_HOST", "localhost");
 define("DB_USER", "root");
-define("DB_PASS", "Simi");
+define("DB_PASS", "");
 define("DB_NAME", "sprachtrainer");
 define("TABLE_NAME", "woerterbuch");
 
