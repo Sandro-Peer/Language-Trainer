@@ -331,34 +331,73 @@
     }
 
     function zeigeFalscheWoerter() {
-    fetch("translate.php?showWrong=1")
-      .then(response => response.json())
-      .then(data => {
-        const box = document.getElementById("falscheWoerterBox");
-        const liste = document.getElementById("falscheListe");
-        liste.innerHTML = "";
+  fetch("translate.php?showWrong=1")
+    .then(response => response.json())
+    .then(data => {
+      const box = document.getElementById("falscheWoerterBox");
+      const liste = document.getElementById("falscheListe");
+      liste.innerHTML = "";
 
-        if (data.success && data.wrongWords && data.wrongWords.length > 0) {
-          data.wrongWords.forEach(item => {
-            const li = document.createElement("li");
-            li.textContent = `${item.original} - ${item.uebersetzung}`;
-            liste.appendChild(li);
-          });
-          box.style.display = "block";
-          box.scrollIntoView({ behavior: "smooth" });
-        } else {
+      if (data.success && data.wrongWords && data.wrongWords.length > 0) {
+        data.wrongWords.forEach(item => {
           const li = document.createElement("li");
-          li.textContent = "Keine falsch übersetzten Wörter gespeichert.";
+
+          const span = document.createElement("span");
+          span.textContent = item.original + " - ";
+
+          const input = document.createElement("input");
+          input.type = "text";
+          input.value = item.uebersetzung;
+          input.style.marginRight = "10px";
+
+          const button = document.createElement("button");
+          button.textContent = "Ignorieren";
+          button.onclick = () => korrigiereWort(item.original, input.value);
+
+          li.appendChild(span);
+          li.appendChild(input);
+          li.appendChild(button);
+
           liste.appendChild(li);
-          box.style.display = "block";
-        }
-      })
-      .catch(error => {
-        console.error("Fehler:", error);
-        document.getElementById("falscheListe").innerHTML = "<li>Fehler beim Laden der Liste.</li>";
-        document.getElementById("falscheWoerterBox").style.display = "block";
-      });
-  }
+        });
+        box.style.display = "block";
+        box.scrollIntoView({ behavior: "smooth" });
+      } else {
+        const li = document.createElement("li");
+        li.textContent = "Keine falsch übersetzten Wörter gespeichert.";
+        liste.appendChild(li);
+        box.style.display = "block";
+      }
+    })
+    .catch(error => {
+      console.error("Fehler:", error);
+      document.getElementById("falscheListe").innerHTML = "<li>Fehler beim Laden der Liste.</li>";
+      document.getElementById("falscheWoerterBox").style.display = "block";
+    });
+}
+function korrigiereWort(original, neueUebersetzung) {
+  fetch("translate.php", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ word: original, translation: neueUebersetzung })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert("Übersetzung wurde aktualisiert!");
+      zeigeFalscheWoerter(); // Liste neu laden
+    } else {
+      alert("Fehler beim Aktualisieren: " + data.message);
+    }
+  })
+  .catch(error => {
+    console.error("Fehler:", error);
+    alert("Ein Fehler ist aufgetreten.");
+  });
+}
+
 
 
   </script>
