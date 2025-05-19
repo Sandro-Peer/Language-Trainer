@@ -197,7 +197,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     $data = json_decode(file_get_contents("php://input"), true);
 
     if (isset($data['word']) && isset($data['translation'])) {
-        // keine zweite session_start() nötig – ist ganz oben im Skript schon gesetzt
 
         $conn = getDatabaseConnection();
         saveTranslation($conn, $data['word'], $data['translation']);
@@ -208,11 +207,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         });
         
 
-        // Auch Session aktualisieren, falls vorhanden
         if (isset($_SESSION['falsch']) && is_array($_SESSION['falsch'])) {
             foreach ($_SESSION['falsch'] as &$wort) {
                 if ($wort === $data['word']) {
-                    // keine Änderung nötig – optional: Du kannst hier Logging oder Entfernen einbauen
                     break;
                 }
             }
