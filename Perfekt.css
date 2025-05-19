@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+*{
+    margin: 0;
+    padding: 0;
+    font-family: 'poppins', san-serif;
+
+}
+section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  background: url('./landscape.jpg') no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+.form-box {
+  position: relative;
+  width: 400px;
+  height: 450px;
+  background: rgba(0, 0, 0, 0.3); /* Beispielhintergrund mit Transparenz */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden; /* Damit nichts über den Rand hinaus geht */
+  border-radius: 50px;
+}
+
+/* Overlay für das Hintergrundbild */
+.form-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('landscape.jpg') no-repeat center center;
+  background-size: cover;
+  filter: blur(20px); /* Blur-Effekt anwenden */
+  z-index: -1; /* Stellt sicher, dass das Overlay hinter der Form-Box bleibt */
+}
+
+
+#U{
+    font-size: 2em;
+    color:#fff;
+    text-align: center;
+
+}
+
+.inputbox{
+    position: relative;
+    margin: 25px 0;
+    width: 310px;
+    border-bottom: 2px solid #fff;
+    z-index: 20px;
+
+} 
+
+.inputbox label{
+    position: absolute;
+    top: 50%;
+    left: 5px;
+    transform: translateY(-50%);
+    color: #fff;
+    font-size: 1em;
+    pointer-events: none;
+    transition: .5s;
+
+}
+input:focus ~ label,
+input:valid ~ label{
+    top:-5px;
+
+}
+.inputbox input{
+    width: 100%;
+    height: 50px;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 1em;
+    padding: 35px 0 5px;
+    color: #fff;
+
+
+}
+#I{
+    position: absolute;
+    right: 20px;
+    color: #fff;
+    font-size: 1.2em;
+    top: 20px;
+    
+
+}
+.forget{
+    margin: -15px 0 15px;
+    font-size: .9em;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+}
+
+.forget label input{
+    margin-right: 3px;
+}
+.forget label a{
+    color: #fff;
+    text-decoration: none;
+
+}
+.forget label a:hover{
+    text-decoration: underline;
+}
+button{
+    width: 100%;
+    height: 40px;
+    border-radius: 40px !important;
+    background: #fff;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+}
+.register{
+    font-size: .9em;
+    color: #fff;
+    text-align: center;
+    margin: 25px 0 10px;
+}
+.register p a{
+    text-decoration: none;
+    color: #fff;
+    font-weight: 600;
+}
+.register p a:hover{
+    text-decoration: underline;
+}

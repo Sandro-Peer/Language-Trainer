@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Language Trainer</title>
+<style>
+  :root {
+    --primary: #0077cc;
+    --primary-dark: #005fa3;
+    --bg-gradient-start: #dbeafe;
+    --bg-gradient-end: #e0f2fe;
+    --text: #1f2937;
+    --white: #ffffff;
+    --shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+    background-image: url('https://www.transparenttextures.com/patterns/diamond-upholstery.png');
+    background-repeat: repeat;
+    background-size: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+
+  h1, h2 {
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .container {
+    background: var(--white);
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    max-width: 500px;
+    width: 100%;
+    margin-bottom: 30px;
+    transition: transform 0.2s;
+  }
+
+  .container:hover {
+    transform: scale(1.01);
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    transition: border-color 0.3s;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--primary);
+    outline: none;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    background: var(--primary);
+    color: var(--white);
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+  }
+
+  button:hover {
+    background: var(--primary-dark);
+    transform: scale(1.02);
+  }
+
+  #result {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: center;
+    background-color: #f0f9ff; /* Heller Hintergrund */
+    border: 1px solid #0077cc; /* Rahmen in der Primärfarbe */
+    border-radius: 10px; /* Abgerundete Ecken */
+    padding: 15px; /* Innenabstand */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Leichter Schatten */
+    max-width: 400px; /* Maximale Breite */
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+
+  @media (max-width: 600px) {
+    body {
+      padding: 20px 10px;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    h1, h2 {
+      font-size: 22px;
+    }
+  }
+  .navbar {
+  background-color: var(--white);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 1000px;
+  padding: 15px 30px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.nav-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--primary-dark);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+/* Dropdown-Menü */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: var(--white);
+  box-shadow: var(--shadow);
+  border-radius: 10px;
+  min-width: 180px;
+  z-index: 1000;
+  top: 100%; /* Statt top: 30px; */
+  left: 0;   /* Damit es sich unter dem Button ausrichtet */
+}
+
+
+.dropbtn {
+  background-color: transparent;
+  color: var(--primary-dark);
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+}
+
+
+
+.dropdown-content a {
+  color: var(--text);
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  border-bottom: 1px solid #eee;
+}
+
+.dropdown-content a:last-child {
+  border-bottom: none;
+}
+
+.dropdown-content a:hover {
+  background-color: #f0f9ff;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--primary-dark);
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover {
+  color: var(--primary);
+}
+
+.button-row {
+  display: flex;
+  gap: 10px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.button-row button {
+  flex: 1;
+  min-width: 120px;
+}
+
+</style>
+
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-title">🌐 Language Trainer</div>
+  <div class="nav-links">
+    <div class="dropdown">
+      <button class="dropbtn">Team</button>
+      <div class="dropdown-content">
+        <a href="#">Sandro Peer</a>
+        <a href="#">Dominic Rieder</a>
+        <a href="#">Dominik Nolf</a>
+      </div>
+    </div>
+    <div class="dropdown">
+  <button class="dropbtn">Spiele</button>
+  <div class="dropdown-content">
+    
+    <a href="Trainer.html">Üben</a>
+  </div>
+</div>
+
+    <a href="support.html">Support</a>
+
+    <a href="#">Passwort ändern</a>
+    <a href="Perfekt.html">Ausloggen</a>
+
+  </div>
+</nav>
+
+
+
+  <h1>Language Trainer</h1>
+
+  <div class="translator">
+    <input type="text" id="wordInput" placeholder="Gib ein Wort ein...">
+    <div class="button-row">
+      <button onclick="translateWord()">Übersetzen</button>
+      <button onclick="zeigeFalscheWoerter()" style="background-color: #ff5c5c;"> Fehler anzeigen</button>
+    </div>
+    <div id="result"></div>
+  </div>
+  
+
+  <div id="addTranslation">
+    <h1>Übersetzung hinzufügen</h1>
+    <input type="text" id="translationInput" placeholder="Gib die Übersetzung ein...">
+    <button onclick="saveTranslation()">Speichern</button>
+    </div>
+  </div>
+
+  <div class="container" id="falscheWoerterBox" style="display: none; margin-top: 30px;">
+    <h2>Falsch übersetzte Wörter</h2>
+    <ul id="falscheListe" style="margin-top: 15px; padding-left: 20px; list-style: disc;"></ul>
+  </div>
+  
+  
+  <script>
+    function translateWord() {
+  const word = document.getElementById("wordInput").value.trim();
+
+  if (word === "") {
+    document.getElementById("result").textContent = "Bitte gib ein Wort ein.";
+    return;
+  }
+
+  fetch("translate.php?word=" + encodeURIComponent(word))
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById("result").textContent = "Übersetzung: " + data.translation;
+      } else {
+        document.getElementById("result").textContent = "Keine Übersetzung gefunden.";
+      }
+    })
+    .catch(error => {
+      console.error("Fehler:", error);
+      document.getElementById("result").textContent = "Ein Fehler ist aufgetreten.";
+    });
+}
+    function saveTranslation() {
+      const word = document.getElementById("wordInput").value.trim();
+      const translation = document.getElementById("translationInput").value.trim();
+
+      if (translation === "") {
+        document.getElementById("result").textContent = "Bitte gib eine Übersetzung ein.";
+        return;
+      }
+
+      fetch("translate.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ word: word, translation: translation })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            document.getElementById("result").textContent = "Übersetzung gespeichert!";
+            document.getElementById("wordInput").value = ""; // Leert das Eingabefeld
+            document.getElementById("translationInput").value = "";
+          } else {
+            document.getElementById("result").textContent = "Fehler beim Speichern der Übersetzung.";
+          }
+        })
+        .catch(error => {
+          console.error("Fehler:", error);
+          document.getElementById("result").textContent = "Ein Fehler ist aufgetreten.";
+        });
+    }
+
+    function zeigeFalscheWoerter() {
+    fetch("translate.php?showWrong=1")
+      .then(response => response.json())
+      .then(data => {
+        const box = document.getElementById("falscheWoerterBox");
+        const liste = document.getElementById("falscheListe");
+        liste.innerHTML = "";
+
+        if (data.success && data.wrongWords && data.wrongWords.length > 0) {
+          data.wrongWords.forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = `${item.original} - ${item.uebersetzung}`;
+            liste.appendChild(li);
+          });
+          box.style.display = "block";
+          box.scrollIntoView({ behavior: "smooth" });
+        } else {
+          const li = document.createElement("li");
+          li.textContent = "Keine falsch übersetzten Wörter gespeichert.";
+          liste.appendChild(li);
+          box.style.display = "block";
+        }
+      })
+      .catch(error => {
+        console.error("Fehler:", error);
+        document.getElementById("falscheListe").innerHTML = "<li>Fehler beim Laden der Liste.</li>";
+        document.getElementById("falscheWoerterBox").style.display = "block";
+      });
+  }
+
+
+  </script>
+
+</body>
+</html>
