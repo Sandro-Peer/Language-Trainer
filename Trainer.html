@@ -145,8 +145,18 @@
       }
     }
   
-    document.querySelector(".audio-icon").addEventListener("click", function () {
-      alert("Audio würde hier abgespielt werden!");
+      document.querySelector(".audio-icon").addEventListener("click", function () {
+      const word = document.getElementById("word").textContent;
+      const utterance = new SpeechSynthesisUtterance(word);
+
+      // Sprache einstellen – z. B. "de-DE" für Deutsch oder "en-US" für Englisch
+      utterance.lang = "de-DE"; // falls deutsches Wort vorgelesen wird
+
+      // Optional: Stimme ändern (z. B. weiblich, männlich, englisch, etc.)
+      // const voices = window.speechSynthesis.getVoices();
+      // utterance.voice = voices.find(v => v.lang === "de-DE");
+
+      window.speechSynthesis.speak(utterance);
     });
   
     document.getElementById("nextBtn").addEventListener("click", function () {
