@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($password === $user['password']) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
-            header("Location: Frontend.php");
+            header("Location: Frontend.html");
             exit;
         } else {
             echo "Falsches Passwort.";
