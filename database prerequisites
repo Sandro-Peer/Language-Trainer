@@ -125,11 +125,6 @@ INSERT INTO woerterbuch (original, uebersetzung) VALUES
 ('nie', 'never');
 
 
--- Datenbank erstellen (falls noch nicht vorhanden)
-CREATE DATABASE IF NOT EXISTS mein_login_system;
-
--- Datenbank auswählen
-USE mein_login_system;
 
 -- Tabelle 'users' erstellen
 CREATE TABLE IF NOT EXISTS users (
