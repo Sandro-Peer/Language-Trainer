@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Einfache Validierung
     if (empty($username) || empty($email) || empty($password)) {
-        echo "❌ Alle Felder sind erforderlich.";
+        echo "Alle Felder sind erforderlich.";
         exit();
     }
 
@@ -31,9 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     } else {
         if ($conn->errno === 1062) {
-            echo "❌ Diese E-Mail-Adresse ist bereits registriert.";
+            echo "Diese E-Mail-Adresse ist bereits registriert.";
         } else {
-            echo "❌ Fehler: " . $stmt->error;
+            echo "Fehler: " . $stmt->error;
         }
     }
 
