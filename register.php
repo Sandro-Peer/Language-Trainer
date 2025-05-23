@@ -3,7 +3,7 @@
 $host = 'localhost';
 $user = 'root';
 $password = 'root';
-$database = 'mein_login_system';
+$database = 'sprachtrainer';
 
 $conn = new mysqli($host, $user, $password, $database);
 
