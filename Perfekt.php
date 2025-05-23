@@ -19,9 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($user = $result->fetch_assoc()) {
         if ($password === $user['password']) {
-            $_SESSION['email'] = $user['email'];
+            $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
-            $_SESSION['wrong_words'] = $user['wrong_words'] ?? '';
             header("Location: Frontend.php");
             exit;
         } else {
