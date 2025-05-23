@@ -12,7 +12,12 @@ CREATE TABLE IF NOT EXISTS woerterbuch (
     original VARCHAR(255) NOT NULL,
     uebersetzung VARCHAR(255) NOT NULL
 );
-
+CREATE TABLE if not exists user_wrong_words (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    wrong_word VARCHAR(255) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
 
 
 
@@ -134,10 +139,5 @@ CREATE TABLE IF NOT EXISTS users (
   password VARCHAR(255) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE if not exists user_wrong_words (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    wrong_word VARCHAR(255) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
+
 
