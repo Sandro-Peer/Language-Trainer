@@ -1,41 +1,38 @@
 <?php
-session_start(); // Falls du später Sitzungen brauchst
+session_start();
 
-// Verbindung zur Datenbank
-$host = "localhost";
-$dbname = "mein_login_system";
-$user = "root"; // Ändern falls nötig
-$pass = "root";     // Ändern falls nötig
+// Datenbankverbindung
+$conn = new mysqli('localhost', 'root', 'root', 'mein_login_system');
 
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("Verbindung fehlgeschlagen: " . $e->getMessage());
+if ($conn->connect_error) {
+    die("Verbindung zur Datenbank fehlgeschlagen: " . $conn->connect_error);
 }
 
-// Formular-Daten
-$email = $_POST['email'] ?? '';
-$password = $_POST['password'] ?? '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    if ($user) {
-        if ($user['password'] === $password) {
-            // Erfolgreich eingeloggt, weiterleiten
-            $_SESSION['user_id'] = $user['id'];
+    if ($user = $result->fetch_assoc()) {
+        if ($password === $user['password']) {
             $_SESSION['email'] = $user['email'];
-            
-            header("Location: frontend.html");
-            exit();
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['wrong_words'] = $user['wrong_words'] ?? '';
+            header("Location: Frontend.php");
+            exit;
         } else {
-            echo "<h2>Falsches Passwort.</h2>";
+            echo "Falsches Passwort.";
         }
     } else {
-        echo "<h2>Benutzer nicht gefunden.</h2>";
+        echo "Benutzer nicht gefunden.";
     }
+
+    $stmt->close();
 }
+
+$conn->close();
 ?>
