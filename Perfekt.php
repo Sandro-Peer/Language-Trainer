@@ -2,7 +2,7 @@
 session_start();
 
 // Datenbankverbindung
-$conn = new mysqli('localhost', 'root', 'root', 'mein_login_system');
+$conn = new mysqli('localhost', 'root', 'root', 'sprachtrainer');
 
 if ($conn->connect_error) {
     die("Verbindung zur Datenbank fehlgeschlagen: " . $conn->connect_error);
