@@ -2,23 +2,20 @@
 session_start();
 header("Content-Type: application/json");
 
-// Konstanten definieren
 define("DB_HOST", "localhost");
 define("DB_USER", "root");
-define("DB_PASS", "");
-define("DB_NAME", "sprachtrainer");
+define("DB_PASS", "root");
+define("DB_NAME", "sprachtrainer");       // EINHEITLICHE Datenbank
 define("TABLE_NAME", "woerterbuch");
 
-// Datenbankverbindung herstellen
 function getDatabaseConnection() {
     $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
     if ($conn->connect_error) {
-        respondWithError("DB-Verbindung fehlgeschlagen.");
+        respondWithError("DB-Verbindung fehlgeschlagen: " . $conn->connect_error);
     }
     return $conn;
 }
 
-// Einheitliche JSON-Antworten
 function respondWithError($message) {
     echo json_encode(["success" => false, "error" => $message]);
     exit;
@@ -29,7 +26,6 @@ function respondWithSuccess($data = []) {
     exit;
 }
 
-// Übersetzung speichern
 function saveTranslation($conn, $original, $translation) {
     $stmt = $conn->prepare("REPLACE INTO " . TABLE_NAME . " (original, uebersetzung) VALUES (?, ?)");
     if (!$stmt) {
@@ -40,7 +36,6 @@ function saveTranslation($conn, $original, $translation) {
     $stmt->close();
 }
 
-// Übersetzung abrufen
 function getTranslation($conn, $word) {
     $stmt = $conn->prepare("SELECT uebersetzung FROM " . TABLE_NAME . " WHERE original = ?");
     if (!$stmt) {
@@ -54,7 +49,6 @@ function getTranslation($conn, $word) {
     return $translation;
 }
 
-// Wörter für das Training abrufen
 function getWordsForTraining($conn) {
     $result = $conn->query("SELECT original, uebersetzung FROM " . TABLE_NAME);
     if (!$result) {
@@ -68,19 +62,43 @@ function getWordsForTraining($conn) {
     return $words;
 }
 
-// POST: Falsche Antworten speichern
+// POST: Falsche Antwort speichern
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $data = json_decode(file_get_contents("php://input"), true);
 
+    // Falsches Wort speichern (ID des Wortes in woerterbuch)
     if (isset($data["falsch"])) {
-        $falsch = $data["falsch"];
+        $falsch = intval($data["falsch"]);
         if (!isset($_SESSION["falsch"])) {
             $_SESSION["falsch"] = [];
         }
         $_SESSION["falsch"][] = $falsch;
+
+        $conn = getDatabaseConnection();
+
+        if (isset($_SESSION["user_id"])) {
+            $userId = intval($_SESSION["user_id"]);
+
+            $checkStmt = $conn->prepare("SELECT id FROM user_wrong_words WHERE user_id = ? AND wrong_word = ?");
+            $checkStmt->bind_param("ii", $userId, $falsch);
+            $checkStmt->execute();
+            $checkStmt->store_result();
+
+            if ($checkStmt->num_rows === 0) {
+                $insertStmt = $conn->prepare("INSERT INTO user_wrong_words (user_id, wrong_word) VALUES (?, ?)");
+                $insertStmt->bind_param("ii", $userId, $falsch);
+                $insertStmt->execute();
+                $insertStmt->close();
+            }
+
+            $checkStmt->close();
+        }
+
+        $conn->close();
         respondWithSuccess();
     }
 
+    // Neue Übersetzung speichern
     if (!$data || !isset($data["word"]) || !isset($data["translation"])) {
         respondWithError("Ungültiges JSON oder fehlende Felder.");
     }
@@ -109,6 +127,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     respondWithSuccess();
 }
 
+// GET: Übersetzung abrufen
 if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["word"])) {
     $word = strtolower(trim($_GET["word"]));
     if (empty($word)) {
@@ -116,52 +135,52 @@ if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["word"])) {
     }
 
     $conn = getDatabaseConnection();
-
-    // Fetch translation for the word
     $translation = getTranslation($conn, $word);
+    $conn->close();
+
     if ($translation) {
-        $conn->close();
         respondWithSuccess(["translation" => $translation]);
+    } else {
+        respondWithError("Keine Übersetzung gefunden.");
     }
-
-    $conn->close();
-    respondWithError("Keine Übersetzung gefunden.");
 }
 
-// GET: falsch übersetzte Wörter anzeigen
+// GET: Falsche Wörter anzeigen
 if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["showWrong"])) {
-    $conn = getDatabaseConnection();
-    $wrongWords = isset($_SESSION['falsch']) ? $_SESSION['falsch'] : [];
-    $wrongWordsWithTranslations = [];
-
-    foreach ($wrongWords as $wrongWord) {
-        $stmt = $conn->prepare("SELECT original, uebersetzung FROM " . TABLE_NAME . " WHERE original = ?");
-        if ($stmt) {
-            $stmt->bind_param("s", $wrongWord);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            if ($row = $result->fetch_assoc()) {
-                $wrongWordsWithTranslations[] = $row;
-            }
-            $stmt->close();
-        }
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(403);
+        echo json_encode(["error" => "Nicht eingeloggt"]);
+        exit;
     }
 
-    $conn->close();
-    respondWithSuccess(["wrongWords" => $wrongWordsWithTranslations]);
+    $conn = getDatabaseConnection();
+    $userId = $_SESSION['user_id'];
+
+    $stmt = $conn->prepare("
+        SELECT woerterbuch.original, woerterbuch.uebersetzung 
+        FROM user_wrong_words 
+        JOIN woerterbuch ON user_wrong_words.wrong_word = woerterbuch.id 
+        WHERE user_wrong_words.user_id = ?
+    ");
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $wrongWords = [];
+    while ($row = $result->fetch_assoc()) {
+        $wrongWords[] = $row;
+    }
+
+    echo json_encode($wrongWords);
+    exit;
 }
 
-
-
-// GET: Wörter für das Training abrufen
+// GET: Trainingswörter abrufen
 if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["getWords"])) {
     $conn = getDatabaseConnection();
-
-    // Fetch wrong words from the session
     $wrongWords = isset($_SESSION['falsch']) ? $_SESSION['falsch'] : [];
 
-    // Fetch all words from the database
-    $result = $conn->query("SELECT original, uebersetzung FROM " . TABLE_NAME);
+    $result = $conn->query("SELECT id, original, uebersetzung FROM " . TABLE_NAME);
     if (!$result) {
         respondWithError("Datenbankfehler: " . $conn->error);
     }
@@ -171,50 +190,37 @@ if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["getWords"])) {
         $allWords[] = $row;
     }
 
-    // Prioritize wrong words
     $words = [];
-    foreach ($wrongWords as $wrongWord) {
+    foreach ($wrongWords as $wrongId) {
         foreach ($allWords as $key => $word) {
-            if ($word['original'] === $wrongWord) {
+            if ($word['id'] == $wrongId) {
                 $words[] = $word;
-                unset($allWords[$key]); // Remove to avoid duplicates
+                unset($allWords[$key]);
                 break;
             }
         }
     }
 
-    // Add remaining words and shuffle
     $words = array_merge($words, $allWords);
     shuffle($words);
-
-    // Limit to 20 words
     $words = array_slice($words, 0, 20);
 
     $conn->close();
     respondWithSuccess(["words" => $words]);
 }
+
+// PUT: Übersetzung aktualisieren und aus "falsch" entfernen
 if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     $data = json_decode(file_get_contents("php://input"), true);
 
     if (isset($data['word']) && isset($data['translation'])) {
-
         $conn = getDatabaseConnection();
         saveTranslation($conn, $data['word'], $data['translation']);
         $conn->close();
-        
-        $_SESSION['falsch'] = array_filter($_SESSION['falsch'], function($wort) use ($data) {
-            return $wort !== $data['word'];
-        });
-        
-
-        // Auch Session aktualisieren, falls vorhanden
-        if (isset($_SESSION['falsch']) && is_array($_SESSION['falsch'])) {
-            foreach ($_SESSION['falsch'] as &$wort) {
-                if ($wort === $data['word']) {
-                    // keine Änderung nötig – optional: Du kannst hier Logging oder Entfernen einbauen
-                    break;
-                }
-            }
+        if (isset($_SESSION['falsch']) && is_array($_SESSION['falsch']) && isset($data['id'])) {
+            $_SESSION['falsch'] = array_filter($_SESSION['falsch'], function($wortId) use ($data) {
+                return $wortId !== $data['id'];
+            });
         }
 
         respondWithSuccess();
@@ -222,6 +228,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
         respondWithError("Ungültige Daten.");
     }
 }
-
 
 respondWithError("Ungültige Anfrage.");
