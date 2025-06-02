@@ -19,7 +19,7 @@ section {
 .form-box {
   position: relative;
   width: 400px;
-  height: 450px;
+  height: 550px;
   background: rgba(0, 0, 0, 0.3); /* Beispielhintergrund mit Transparenz */
   display: flex;
   justify-content: center;
