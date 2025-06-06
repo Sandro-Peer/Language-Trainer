@@ -33,7 +33,7 @@
     }
 
     input, textarea {
-      width: 100%;
+      width: 94%;
       padding: 0.75rem;
       margin-bottom: 1rem;
       border: 1px solid #333;
@@ -76,35 +76,16 @@
 
   <div class="form-container">
     <h1>Support</h1>
-    <form id="supportForm">
-      <input type="text" id="name" placeholder="Dein Name" required />
-      <input type="email" id="email" placeholder="Deine E-Mail" required />
-      <textarea id="message" placeholder="Deine Nachricht" rows="5" required></textarea>
-      <button type="submit">Absenden</button>
-    </form>
+<form action="formular.php" method="post">
+  <input type="text" id="name" name="name" placeholder="Dein Name" required />
+  <input type="email" id="email" name="email" placeholder="Deine E-Mail" required />
+  <textarea id="message" name="message" placeholder="Deine Nachricht" rows="5" required></textarea>
+  <button type="submit">Absenden</button>
+</form>
+
     <div id="result"></div>
   </div>
 
-  <script>
-    document.getElementById("supportForm").addEventListener("submit", function(event) {
-      event.preventDefault(); // Verhindert das Neuladen der Seite
-
-      const name = document.getElementById("name").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const message = document.getElementById("message").value.trim();
-
-      const resultDiv = document.getElementById("result");
-
-      if (!name || !email || !message) {
-        resultDiv.textContent = "Bitte fülle alle Felder aus.";
-        resultDiv.style.color = "#ff5252";
-        return;
-      }
-
-      resultDiv.textContent = "Vielen Dank! Deine Anfrage wurde abgeschickt.";
-      resultDiv.style.color = "#4caf50";
-    });
-  </script>
-
+ 
 </body>
 </html>
