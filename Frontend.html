@@ -5,13 +5,14 @@
   <title>Language Trainer</title>
 <style>
   :root {
-    --primary: #0077cc;
-    --primary-dark: #005fa3;
-    --bg-gradient-start: #dbeafe;
-    --bg-gradient-end: #e0f2fe;
-    --text: #1f2937;
-    --white: #ffffff;
-    --shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    --primary: #7f7f80;
+    --primary-dark: #ffffff;
+    --bg-gradient-start: #000000;
+    --bg-gradient-end: #000000;
+    --text: #ffffff;
+    --white: #000000;
+    --black: black;
+    --shadow: 8px 20px 50px rgba(5, 247, 255, 0.1);
   }
 
   * {
@@ -23,9 +24,9 @@
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
-    background-image: url('https://www.transparenttextures.com/patterns/diamond-upholstery.png');
+    background-image: url('https://wallpaperaccess.com/full/396542.jpg');
     background-repeat: repeat;
-    background-size: auto;
+    background-size:100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -40,7 +41,7 @@
   }
 
   .container {
-    background: var(--white);
+    background: var(--black);
     padding: 30px;
     border-radius: 16px;
     box-shadow: var(--shadow);
@@ -58,15 +59,17 @@
     width: 100%;
     padding: 12px 14px;
     font-size: 16px;
-    border: 1px solid #ccc;
+    border: 1px solid black;
     border-radius: 10px;
     margin-bottom: 15px;
     transition: border-color 0.3s;
+     border: 1px solid #0077cc;
   }
 
   input[type="text"]:focus {
-    border-color: var(--primary);
+   
     outline: none;
+     border: 1px solid #0077cc;
   }
 
   button {
@@ -79,6 +82,7 @@
     border-radius: 10px;
     cursor: pointer;
     transition: background 0.3s, transform 0.2s;
+     border: 1px solid #0077cc;
   }
 
   button:hover {
@@ -92,7 +96,7 @@
     font-weight: 500;
     color: var(--text);
     text-align: center;
-    background-color: #f0f9ff; /* Heller Hintergrund */
+    background-color: black; /* Heller Hintergrund */
     border: 1px solid #0077cc; /* Rahmen in der Primärfarbe */
     border-radius: 10px; /* Abgerundete Ecken */
     padding: 15px; /* Innenabstand */
@@ -117,7 +121,7 @@
     }
   }
   .navbar {
-  background-color: var(--white);
+  background-color: var(--black);
   box-shadow: var(--shadow);
   width: 100%;
   max-width: 1000px;
@@ -129,6 +133,7 @@
   margin-bottom: 40px;
   flex-wrap: wrap;
   gap: 10px;
+   border: 1px solid #0077cc;
 }
 
 .nav-title {
@@ -170,6 +175,7 @@
   cursor: pointer;
   font-size: 16px;
   padding: 0;
+ 
 }
 
 
@@ -179,7 +185,7 @@
   padding: 12px 16px;
   text-decoration: none;
   display: block;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid black;
 }
 
 .dropdown-content a:last-child {
@@ -187,7 +193,7 @@
 }
 
 .dropdown-content a:hover {
-  background-color: #f0f9ff;
+  background-color:black;
 }
 
 .dropdown:hover .dropdown-content {
@@ -218,6 +224,18 @@
   min-width: 120px;
 }
 
+#wordInput{
+  background-color: black;
+  color: black;
+
+}
+
+#translationInput{
+  background-color: black;
+  color: black;
+
+}
+
 </style>
 
 </head>
@@ -236,15 +254,14 @@
     <div class="dropdown">
   <button class="dropbtn">Spiele</button>
   <div class="dropdown-content">
-        <a href="Lernsets">Vokabeln lernen</a>
-
+    
     <a href="Trainer.html">Üben</a>
   </div>
 </div>
 
     <a href="support.html">Support</a>
 
-    <a href="#">Passwort ändern</a>
+    
     <a href="Perfekt.html">Ausloggen</a>
 
   </div>
@@ -258,7 +275,7 @@
     <input type="text" id="wordInput" placeholder="Gib ein Wort ein...">
     <div class="button-row">
       <button onclick="translateWord()">Übersetzen</button>
-      <button onclick="zeigeFalscheWoerter()" style="background-color: #ff5c5c;"> Fehler anzeigen</button>
+      <button onclick="zeigeFalscheWoerter()" style="background-color: #858585;"> Fehler anzeigen</button>
     </div>
     <div id="result"></div>
   </div>
@@ -333,14 +350,14 @@
     }
 
     function zeigeFalscheWoerter() {
-    fetch("translate.php?showWrong=1")
+  fetch("translate.php?showWrong=1")
     .then(response => response.json())
     .then(data => {
       const box = document.getElementById("falscheWoerterBox");
       const liste = document.getElementById("falscheListe");
       liste.innerHTML = "";
 
-      if (data.wrongWords && data.wrongWords.length > 0) {
+      if (data.success && data.wrongWords && data.wrongWords.length > 0) {
         data.wrongWords.forEach(item => {
           const li = document.createElement("li");
 
@@ -353,7 +370,7 @@
           input.style.marginRight = "10px";
 
           const button = document.createElement("button");
-          button.textContent = "Entfernen";
+          button.textContent = "Speichern";
           button.onclick = () => korrigiereWort(item.original, input.value);
 
           li.appendChild(span);
@@ -377,19 +394,18 @@
       document.getElementById("falscheWoerterBox").style.display = "block";
     });
 }
-
-function korrigiereWort(original) {
+function korrigiereWort(original, neueUebersetzung) {
   fetch("translate.php", {
     method: "PUT",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({id: original})
+    body: JSON.stringify({ word: original, translation: neueUebersetzung })
   })
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      alert("Fehler wurde entfernt!");
+      alert("Übersetzung wurde aktualisiert!");
       zeigeFalscheWoerter(); // Liste neu laden
     } else {
       alert("Fehler beim Aktualisieren: " + data.message);
@@ -404,5 +420,6 @@ function korrigiereWort(original) {
 
 
   </script>
+
 </body>
 </html>
