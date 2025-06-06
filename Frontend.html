@@ -332,14 +332,14 @@
     }
 
     function zeigeFalscheWoerter() {
-  fetch("translate.php?showWrong=1")
+    fetch("translate.php?showWrong=1")
     .then(response => response.json())
     .then(data => {
       const box = document.getElementById("falscheWoerterBox");
       const liste = document.getElementById("falscheListe");
       liste.innerHTML = "";
 
-      if (data.success && data.wrongWords && data.wrongWords.length > 0) {
+      if (data.wrongWords && data.wrongWords.length > 0) {
         data.wrongWords.forEach(item => {
           const li = document.createElement("li");
 
@@ -352,7 +352,7 @@
           input.style.marginRight = "10px";
 
           const button = document.createElement("button");
-          button.textContent = "Speichern";
+          button.textContent = "Entfernen";
           button.onclick = () => korrigiereWort(item.original, input.value);
 
           li.appendChild(span);
@@ -376,18 +376,19 @@
       document.getElementById("falscheWoerterBox").style.display = "block";
     });
 }
-function korrigiereWort(original, neueUebersetzung) {
+
+function korrigiereWort(original) {
   fetch("translate.php", {
     method: "PUT",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ word: original, translation: neueUebersetzung })
+    body: JSON.stringify({id: original})
   })
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      alert("Übersetzung wurde aktualisiert!");
+      alert("Fehler wurde entfernt!");
       zeigeFalscheWoerter(); // Liste neu laden
     } else {
       alert("Fehler beim Aktualisieren: " + data.message);
@@ -402,6 +403,5 @@ function korrigiereWort(original, neueUebersetzung) {
 
 
   </script>
-
 </body>
 </html>
