@@ -27,13 +27,30 @@ function respondWithSuccess($data = []) {
 }
 
 function saveTranslation($conn, $original, $translation) {
-    $stmt = $conn->prepare("REPLACE INTO " . TABLE_NAME . " (original, uebersetzung) VALUES (?, ?)");
-    if (!$stmt) {
-        respondWithError("Datenbankfehler: " . $conn->error);
+    // Schritt 1: Prüfen, ob Eintrag bereits existiert
+    $checkStmt = $conn->prepare("SELECT 1 FROM " . TABLE_NAME . " WHERE original = ? AND uebersetzung = ?");
+    if (!$checkStmt) {
+        respondWithError("Datenbankfehler (Prüfung): " . $conn->error);
     }
-    $stmt->bind_param("ss", $original, $translation);
-    $stmt->execute();
-    $stmt->close();
+    $checkStmt->bind_param("ss", $original, $translation);
+    $checkStmt->execute();
+    $checkStmt->store_result();
+
+    if ($checkStmt->num_rows > 0) {
+        // Schon vorhanden – nichts tun oder Nachricht ausgeben
+        $checkStmt->close();
+        return; // oder ggf. eine Info zurückgeben
+    }
+    $checkStmt->close();
+
+    // Schritt 2: Nur einfügen, wenn es noch nicht existiert
+    $insertStmt = $conn->prepare("INSERT INTO " . TABLE_NAME . " (original, uebersetzung) VALUES (?, ?)");
+    if (!$insertStmt) {
+        respondWithError("Datenbankfehler (Einfügen): " . $conn->error);
+    }
+    $insertStmt->bind_param("ss", $original, $translation);
+    $insertStmt->execute();
+    $insertStmt->close();
 }
 
 function getTranslation($conn, $word) {
@@ -68,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Falsches Wort speichern (ID des Wortes in woerterbuch)
     if (isset($data["falsch"])) {
-        $falsch = intval($data["falsch"]);
+        $falsch = $data["falsch"];
         if (!isset($_SESSION["falsch"])) {
             $_SESSION["falsch"] = [];
         }
@@ -80,16 +97,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $userId = intval($_SESSION["user_id"]);
 
             $checkStmt = $conn->prepare("SELECT id FROM user_wrong_words WHERE user_id = ? AND wrong_word = ?");
-            $checkStmt->bind_param("ii", $userId, $falsch);
+            $checkStmt->bind_param("is", $userId, $falsch);
             $checkStmt->execute();
-            $checkStmt->store_result();
-
-            if ($checkStmt->num_rows === 0) {
+            $result = $checkStmt->get_result();
+            $num = $result->num_rows;
+             if ($result->num_rows < 1) 
+            {
+                // Wenn der Eintrag nicht existiert, füge ihn hinzu
                 $insertStmt = $conn->prepare("INSERT INTO user_wrong_words (user_id, wrong_word) VALUES (?, ?)");
-                $insertStmt->bind_param("ii", $userId, $falsch);
+                $insertStmt->bind_param("is", $userId, $falsch);
                 $insertStmt->execute();
                 $insertStmt->close();
-            }
+            } 
+            
 
             $checkStmt->close();
         }
@@ -159,7 +179,7 @@ if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["showWrong"])) {
     $stmt = $conn->prepare("
         SELECT woerterbuch.original, woerterbuch.uebersetzung 
         FROM user_wrong_words 
-        JOIN woerterbuch ON user_wrong_words.wrong_word = woerterbuch.id 
+        JOIN woerterbuch ON user_wrong_words.wrong_word = woerterbuch.original
         WHERE user_wrong_words.user_id = ?
     ");
     $stmt->bind_param("i", $userId);
@@ -171,7 +191,10 @@ if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["showWrong"])) {
         $wrongWords[] = $row;
     }
 
-    echo json_encode($wrongWords);
+    echo json_encode([
+        "success" => true,
+        "wrongWords" => $wrongWords
+    ]);
     exit;
 }
 
@@ -213,20 +236,33 @@ if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["getWords"])) {
 if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     $data = json_decode(file_get_contents("php://input"), true);
 
-    if (isset($data['word']) && isset($data['translation'])) {
-        $conn = getDatabaseConnection();
-        saveTranslation($conn, $data['word'], $data['translation']);
-        $conn->close();
-        if (isset($_SESSION['falsch']) && is_array($_SESSION['falsch']) && isset($data['id'])) {
-            $_SESSION['falsch'] = array_filter($_SESSION['falsch'], function($wortId) use ($data) {
-                return $wortId !== $data['id'];
+    if (isset($data['id']) && isset($_SESSION['user_id'])) {
+        $userId = $_SESSION['user_id'];
+        $original = $data['id'];  // id = Wort (z. B. "wie")
+
+        // 1. Wort aus der Session entfernen
+        if (isset($_SESSION['falsch']) && is_array($_SESSION['falsch'])) {
+            $_SESSION['falsch'] = array_filter($_SESSION['falsch'], function($wortId) use ($original) {
+                return $wortId !== $original;
             });
         }
 
+        // 2. Wort aus der user_wrong_words-Tabelle entfernen
+        $conn = getDatabaseConnection();
+        $stmt = $conn->prepare("DELETE FROM user_wrong_words WHERE user_id = ? AND wrong_word = ?");
+        if (!$stmt) {
+            respondWithError("Datenbankfehler: " . $conn->error);
+        }
+        $stmt->bind_param("is", $userId, $original);
+        $stmt->execute();
+        $stmt->close();
+        $conn->close();
+
         respondWithSuccess();
     } else {
-        respondWithError("Ungültige Daten.");
+        respondWithError("Fehlende ID oder nicht eingeloggt.");
     }
 }
 
 respondWithError("Ungültige Anfrage.");
+
