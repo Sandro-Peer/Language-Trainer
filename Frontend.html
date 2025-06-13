@@ -294,7 +294,7 @@
   </div>
   
   
- <script>
+  <script>
     function translateWord() {
   const word = document.getElementById("wordInput").value.trim();
 
@@ -350,7 +350,7 @@
     }
 
     function zeigeFalscheWoerter() {
-    fetch("translate.php?showWrong=1")
+  fetch("translate.php?showWrong=1")
     .then(response => response.json())
     .then(data => {
       const box = document.getElementById("falscheWoerterBox");
@@ -364,21 +364,28 @@
           const span = document.createElement("span");
           span.textContent = item.original + " - ";
 
-          const input = document.createElement("input");
-          input.type = "text";
-          input.value = item.uebersetzung;
-          input.style.marginRight = "10px";
-
+          const inputOriginal = document.createElement("input");
+          inputOriginal.type = "text";
+          inputOriginal.value = item.original;
+          inputOriginal.style.marginRight = "10px";
+          inputOriginal.readOnly = true;
+          const inputUebersetzung = document.createElement("input");
+          inputUebersetzung.type = "text";
+          inputUebersetzung.value = item.uebersetzung;
+          inputUebersetzung.style.marginRight = "10px";
+          inputUebersetzung.readOnly = true;
           const button = document.createElement("button");
           button.textContent = "Entfernen";
-          button.onclick = () => korrigiereWort(item.original, input.value);
+          button.onclick = () => korrigiereWort(item.original, inputUebersetzung.value);
 
           li.appendChild(span);
-          li.appendChild(input);
+          li.appendChild(inputOriginal);
+          li.appendChild(inputUebersetzung);
           li.appendChild(button);
 
           liste.appendChild(li);
         });
+
         box.style.display = "block";
         box.scrollIntoView({ behavior: "smooth" });
       } else {
@@ -394,6 +401,7 @@
       document.getElementById("falscheWoerterBox").style.display = "block";
     });
 }
+
 
 function korrigiereWort(original) {
   fetch("translate.php", {
